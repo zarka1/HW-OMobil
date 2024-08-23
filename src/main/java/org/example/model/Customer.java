@@ -12,4 +12,14 @@ public class Customer {
         this.customerName = customerName;
         this.customerAddress = customerAddress;
     }
+
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "webShopId=" + webShopId +
+                ", customerId='" + customerId + '\'' +
+                ", customerName='" + customerName + '\'' +
+                ", customerAddress='" + customerAddress + '\'' +
+                '}';
+    }
 }
