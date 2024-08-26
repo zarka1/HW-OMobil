@@ -1,6 +1,0 @@
-2024-08-26T09:02:07.136300900 - ERROR: Card number not correct.
-Faulty Line: WS02;A03;card;2900;6,75762E+15;;21.01.2021
-2024-08-26T09:02:07.141300900 - ERROR: Date is not correct.
-Faulty Line: WS01;A03;card;198;;5,43759E+15;2021.01.182
-2024-08-26T09:02:07.143300100 - ERROR: Customer does not exist
-Faulty Line: WS02;A04;card;22000;;6,75762E+15;22.01.2021
