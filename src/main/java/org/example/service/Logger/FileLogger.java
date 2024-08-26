@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.service.Logger;
 
 import java.io.FileWriter;
 import java.io.IOException;

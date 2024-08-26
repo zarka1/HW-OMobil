@@ -1,20 +1,22 @@
-package org.example.service;
+package org.example.service.DAO;
 
-import org.example.model.Customer;
 import org.example.model.Payment;
 import org.example.model.PaymentMethod;
 import org.example.model.WebshopId;
+import org.example.service.Logger.Logger;
 
+import javax.swing.text.DateFormatter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class PaymentDAOImpl implements PaymentDAO{
+public class PaymentDAOImpl implements PaymentDAO {
 
     private List<Payment> payments;
     private String filePath;
@@ -107,7 +109,11 @@ public class PaymentDAOImpl implements PaymentDAO{
     private LocalDate parseToDate(String dateString){
         dateString = dateString.replaceAll("[:,.]", "-");
         try{
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                    .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    .appendOptional(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                    .toFormatter();
             LocalDate date = LocalDate.parse(dateString, formatter);
             return date;
         } catch (DateTimeParseException e){

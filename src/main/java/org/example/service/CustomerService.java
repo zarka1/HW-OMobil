@@ -1,7 +1,7 @@
 package org.example.service;
 import org.example.model.Customer;
-
-import java.util.List;
+import org.example.service.DAO.CustomerDAO;
+import org.example.service.Logger.Logger;
 
 public class CustomerService {
     private CustomerDAO customerDAO;
@@ -13,7 +13,7 @@ public class CustomerService {
     }
 
     public void printCustomers(){
-        for (Customer customer : customerDAO.readCustomers()){
+        for (Customer customer : customerDAO.getCustomers()){
             logger.logInfo(customer.toString());
         }
     }

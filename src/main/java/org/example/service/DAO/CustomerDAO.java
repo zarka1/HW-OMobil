@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.service.DAO;
 
 import org.example.model.Customer;
 

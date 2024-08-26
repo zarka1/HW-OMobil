@@ -1,6 +1,6 @@
-package org.example.service;
+package org.example.service.Logger;
 
-public class ConsoleLogger implements Logger{
+public class ConsoleLogger implements Logger {
     @Override
     public void logError(String message, String line) {
     }

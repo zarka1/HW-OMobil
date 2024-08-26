@@ -1,7 +1,8 @@
-package org.example.service;
+package org.example.service.DAO;
 
 import org.example.model.Customer;
 import org.example.model.WebshopId;
+import org.example.service.Logger.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,7 +59,7 @@ public class CustomerDAOImpl implements CustomerDAO {
         }
         else {
             Customer customer = new Customer(WebshopId.findByName(customerArray[0]),
-                    customerArray[0] + "_" + customerArray[1],
+                    customerArray[1],
                     customerArray[2],
                     customerArray[3]);
             customers.add(customer);
