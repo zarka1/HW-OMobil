@@ -1,8 +1,8 @@
-Customer.csv and payment.csv files must be in the folder, where the .jar file is.
+customer.csv and payment.csv files must be in the folder, where the .jar file is.
 
 Build Project:
 * mvn clean package in the root folder,
-* copy Customer.csv and payment.csv files in the target folder
+* copy customer.csv and payment.csv files in the target folder
 * cd target
 * java -cp .\otpMobilTest-1.0-SNAPSHOT.jar org.example.Main
 
