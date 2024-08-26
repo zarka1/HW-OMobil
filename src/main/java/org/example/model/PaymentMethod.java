@@ -5,13 +5,11 @@ public enum PaymentMethod {
     TRANSFER;
 
     public static PaymentMethod findByName(String name) {
-        PaymentMethod result = null;
         for( PaymentMethod paymentMethod : values()) {
             if (paymentMethod.name().equalsIgnoreCase(name)) {
-                result = paymentMethod;
-                break;
+                return paymentMethod;
             }
         }
-        return result;
+        return null;
     }
 }

@@ -3,40 +3,48 @@ package org.example.service;
 import org.example.model.*;
 import org.example.service.DAO.CustomerDAO;
 import org.example.service.DAO.PaymentDAO;
+import org.example.service.Logger.ConsoleLogger;
 import org.example.service.Logger.FileLogger;
 import org.example.service.Logger.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class PaymentService {
-    private CustomerDAO customerDAO;
-    private PaymentDAO paymentDAO;
-    private Logger consolelogger;
+    private final CustomerDAO customerDAO;
+    private final PaymentDAO paymentDAO;
+    private static final Logger consoleLogger = new ConsoleLogger();
 
-    public PaymentService(PaymentDAO paymentDAO, Logger consolelogger, CustomerDAO customerDAO) {
+    public PaymentService(PaymentDAO paymentDAO, CustomerDAO customerDAO) {
         this.paymentDAO = paymentDAO;
-        this.consolelogger = consolelogger;
         this.customerDAO = customerDAO;
     }
 
     public void printPayments(){
         for (Payment payment : paymentDAO.getPayments()){
-            consolelogger.logInfo(payment.toString());
+            consoleLogger.logInfo(payment.toString());
         }
     }
 
-    public void saveAllSpendingByCustomer(FileLogger filelogger){
+    public List<Customer> saveAllSpendingByCustomer(FileLogger filelogger){
+        if(filelogger == null) {
+            consoleLogger.logError("Invalid parameters", "");
+            throw new IllegalArgumentException("Filelogger cannot be null.");
+        }
         List<Payment> payments = paymentDAO.getPayments();
         List<Customer> customers = customerDAO.getCustomers();
-        for(int i = 0; i < customers.size(); i++){
-            double totalSpending = calculateTotalSpendingForCustomer(payments, customers.get(i));
-            customers.get(i).setTotalSpending(totalSpending);
+        for (Customer customer : customers) {
+            double totalSpending = calculateTotalSpendingForCustomer(payments, customer);
+            customer.setTotalSpending(totalSpending);
         }
-        saveAllCustomersSpendingToFile(filelogger, customers);
+        paymentDAO.saveAllCustomersSpendingToFile(filelogger, customers);
+        return customers;
     }
 
     public static double calculateTotalSpendingForCustomer(List<Payment> payments, Customer customer) {
+        if(payments == null || customer == null) {
+            consoleLogger.logError("Invalid parameters", "");
+            throw new IllegalArgumentException("Payments and Customer cannot be null.");
+        }
         double totalSpending = 0;
         for (Payment payment : payments){
             if ((payment.getCustomerId()).equals(customer.getCustomerId())){
@@ -46,16 +54,18 @@ public class PaymentService {
         return totalSpending;
     }
 
-    private static void saveAllCustomersSpendingToFile(FileLogger fileLogger, List<Customer> customers){
-        for (Customer customer : customers){
-            fileLogger.logInfo(customer.getCustomerName() +";" +
-                    customer.getCustomerAddress() +";" +
-                    customer.getTotalSpending());
+    public void saveTopSpendingCustomersToFile(FileLogger fileLogger, int numberOfTopCustomers){
+        if(fileLogger == null || numberOfTopCustomers < 1) {
+            consoleLogger.logError("Invalid parameters", "");
+            throw new IllegalArgumentException("Filelogger cannot be null, numberOfTopCustomers" +
+                    "must be greater than 0.");
         }
+        List<Customer> customers = new ArrayList<>(customerDAO.getCustomers());
+        List<Customer> topCustomers = calculateTopCustomers(numberOfTopCustomers, customers);
+        paymentDAO.saveAllCustomersSpendingToFile(fileLogger, topCustomers);
     }
 
-    public void saveTopSpendingCustomersToFile(FileLogger fileLogger, int numberOfTopCustomers){
-        List<Customer> customers = new ArrayList<>(customerDAO.getCustomers());
+    private static List<Customer> calculateTopCustomers(int numberOfTopCustomers, List<Customer> customers) {
         List<Customer> topCustomers = new ArrayList<>();
         for(int i = 0; i < numberOfTopCustomers; i++){
             double maxAmount = customers.get(0).getTotalSpending();
@@ -69,34 +79,42 @@ public class PaymentService {
             topCustomers.add(customers.get(maxItem));
             customers.remove(maxItem);
         }
-        saveAllCustomersSpendingToFile(fileLogger, topCustomers);
+        return topCustomers;
     }
 
-    public void saveWebshopIncomes(FileLogger fileLogger){
-        List<WebshopIncome> webshopIncomes = new ArrayList<>();
-        for (WebshopId webshopId : WebshopId.values()){
-            WebshopIncome webshopIncome = new WebshopIncome(webshopId);
-            webshopIncomes.add(webshopIncome);
+    public List<WebshopIncome> saveWebshopIncomesToFile(FileLogger fileLogger){
+        if(fileLogger == null) {
+            consoleLogger.logError("Invalid parameters", "");
+            throw new IllegalArgumentException("Filelogger cannot be null.");
         }
+        List<WebshopIncome> webshopIncomes = createWebshopIncomes();
         for (Payment payment : paymentDAO.getPayments()){
-            for (int i = 0; i < webshopIncomes.size(); i++){
-                if(payment.getWebShopId() == webshopIncomes.get(i).getWebshopId()){
-                    if(payment.getPaymentMethod() == PaymentMethod.CARD){
-                        webshopIncomes.get(i).addCardPaymentsAmount(payment.getAmount());
+            for (WebshopIncome webshopIncome : webshopIncomes) {
+                if (payment.getWebShopId().equals(webshopIncome.getWebshopId())) {
+                    if (payment.getPaymentMethod() == PaymentMethod.CARD) {
+                        webshopIncome.addCardPaymentsAmount(payment.getAmount());
                     } else {
-                        webshopIncomes.get(i).addTrasferPaymentAmount(payment.getAmount());
+                        webshopIncome.addTransferPaymentAmount(payment.getAmount());
                     }
                 }
             }
         }
-        saveWebshopIncomesToFile(fileLogger, webshopIncomes);
+        paymentDAO.saveWebshopIncomesToFile(fileLogger, webshopIncomes);
+        return webshopIncomes;
     }
 
-    private static void saveWebshopIncomesToFile(FileLogger fileLogger, List<WebshopIncome> webshopIncomes){
-        for(WebshopIncome webshopIncome : webshopIncomes){
-            fileLogger.logInfo(webshopIncome.getWebshopId().toString() + ";"
-            + webshopIncome.getCardPayments() + ";"
-            + webshopIncome.getTransferPayments());
+    private List<WebshopIncome> createWebshopIncomes() {
+        List<WebshopIncome> webshopIncomes = new ArrayList<>();
+        List<String> webshopList = new ArrayList<>();
+        for (Payment payment : paymentDAO.getPayments()){
+            if(!webshopList.contains(payment.getWebShopId())){
+                webshopList.add(payment.getWebShopId());
+            }
         }
+        for (String string : webshopList){
+            WebshopIncome webshopIncome = new WebshopIncome(string);
+            webshopIncomes.add(webshopIncome);
+        }
+        return webshopIncomes;
     }
 }

@@ -3,17 +3,17 @@ package org.example.model;
 import java.time.LocalDate;
 
 public class Payment {
-    private WebshopId webShopId;
-    private String customerId;
-    private PaymentMethod paymentMethod;
-    private Double amount;
+    private final String webShopId;
+    private final java.lang.String customerId;
+    private final PaymentMethod paymentMethod;
+    private final Double amount;
     private Double accountNumber;
     private Double cardNumber;
-    private LocalDate paymentDate;
+    private final LocalDate paymentDate;
 
-    public Payment(WebshopId webShopId, String customerId, PaymentMethod paymentMethod, Double amount, Double accountNumber, Double cardNumber, LocalDate paymentDate) {
-        this.webShopId = webShopId;
-        this.customerId = webShopId.toString() + "_" + customerId;
+    public Payment(String webShopId, java.lang.String customerId, PaymentMethod paymentMethod, Double amount, Double accountNumber, Double cardNumber, LocalDate paymentDate) {
+        this.webShopId = webShopId;//mindent final-re, ellenorzeseket a card vs. transfer-re
+        this.customerId = webShopId + "_" + customerId;
         this.paymentMethod = paymentMethod;
         this.amount = amount;
         this.accountNumber = accountNumber;
@@ -22,7 +22,7 @@ public class Payment {
     }
 
     @Override
-    public String toString() {
+    public java.lang.String toString() {
         return "Payment{" +
                 "webShopId='" + webShopId + '\'' +
                 ", customerId='" + customerId + '\'' +
@@ -40,9 +40,9 @@ public class Payment {
 
     public void setCardNumber(Double cardNumber) {
         this.cardNumber = cardNumber;
-    }
+    }//settert kivenni
 
-    public String getCustomerId() {
+    public java.lang.String getCustomerId() {
         return customerId;
     }
 
@@ -54,7 +54,7 @@ public class Payment {
         return paymentMethod;
     }
 
-    public WebshopId getWebShopId() {
+    public String getWebShopId() {
         return webShopId;
     }
 }

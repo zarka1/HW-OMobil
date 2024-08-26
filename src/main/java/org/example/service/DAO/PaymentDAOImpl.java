@@ -1,11 +1,11 @@
 package org.example.service.DAO;
 
+import org.example.model.Customer;
 import org.example.model.Payment;
 import org.example.model.PaymentMethod;
-import org.example.model.WebshopId;
-import org.example.service.Logger.Logger;
-
-import javax.swing.text.DateFormatter;
+import org.example.model.WebshopIncome;
+import org.example.service.Logger.ConsoleLogger;
+import org.example.service.Logger.FileLogger;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
@@ -18,14 +18,18 @@ import java.util.Scanner;
 
 public class PaymentDAOImpl implements PaymentDAO {
 
-    private List<Payment> payments;
-    private String filePath;
-    private Logger logger;
-    private CustomerDAO customerDAO;
+    private final List<Payment> payments;
+    private final java.lang.String filePath;
+    private final FileLogger fileLogger;
+    private final ConsoleLogger consoleLogger;
+    private final CustomerDAO customerDAO;
 
-    public PaymentDAOImpl(String filePath, Logger logger, CustomerDAO customerDAO) {
+
+    public PaymentDAOImpl(java.lang.String filePath, FileLogger fileLogger,
+                          ConsoleLogger consoleLogger, CustomerDAO customerDAO) {
         this.filePath = filePath;
-        this.logger = logger;
+        this.fileLogger = fileLogger;
+        this.consoleLogger = consoleLogger;
         this.customerDAO = customerDAO;
         this.payments = readPayments();
     }
@@ -37,40 +41,38 @@ public class PaymentDAOImpl implements PaymentDAO {
             File myObj = new File(filePath);
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
+                java.lang.String data = myReader.nextLine();
                 savePaymentInMem(data, payments);
             }
             myReader.close();
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
+            consoleLogger.logInfo("An error occurred.");
             e.printStackTrace();
         }
         return payments;
     }
 
-    private void savePaymentInMem(String paymentData, List<Payment> payments){
-        String[] paymentArray = paymentData.split(";");
-        if(WebshopId.checkIfExist(paymentArray[0]) == false ){
-            logger.logError("Webshop Id not correct.", paymentData);
-        } else if(!customerDAO.checkIfExist(paymentArray[0] + "_" + paymentArray[1])){//check if customer valid
-            logger.logError("Customer does not exist", paymentData);
-        } else if((paymentArray[2] == "card" &&//check if transfer number and card number are exist and just the required on exists
+    private void savePaymentInMem(java.lang.String paymentData, List<Payment> payments){
+        java.lang.String[] paymentArray = paymentData.split(";");
+        if(!customerDAO.checkIfExist(paymentArray[0] + "_" + paymentArray[1])){
+            fileLogger.logError("Customer does not exist", paymentData);
+        } else if((paymentArray[2].equals("card") &&
                 (paymentArray[4].length() != 0  || paymentArray[5].length() == 0)) ||
-                (paymentArray[2] == "transfer") &&
-                        (paymentArray[4].length() == 0 || paymentArray[5].length() != 0)){
-            logger.logError("Cardnumber or transfernumber not correct.", paymentData);
+                (paymentArray[2].equals("transfer") &&
+                        (paymentArray[4].length() == 0 || paymentArray[5].length() != 0))){
+            fileLogger.logError("Card number or transfer number not correct.", paymentData);
         } else if(convertToDouble(paymentArray[3]) == null){
-            logger.logError("Amount not correct.", paymentData);
+            fileLogger.logError("Amount not correct.", paymentData);
         } else if(parseToDate(paymentArray[6]) == null){
-            logger.logError("Date is not correct.", paymentData);
+            fileLogger.logError("Date is not correct.", paymentData);
         }
         else {
             createPayment(paymentData, payments, paymentArray);
         }
     }
 
-    private void createPayment(String paymentData, List<Payment> payments, String[] paymentArray) {
-        Payment payment = new Payment(WebshopId.findByName(paymentArray[0]),
+    private void createPayment(java.lang.String paymentData, List<Payment> payments, java.lang.String[] paymentArray) {
+        Payment payment = new Payment(paymentArray[0],
                 paymentArray[1],
                 PaymentMethod.findByName(paymentArray[2]),
                 Double.parseDouble(paymentArray[3]),
@@ -80,14 +82,14 @@ public class PaymentDAOImpl implements PaymentDAO {
                 );
         if (PaymentMethod.findByName(paymentArray[2]) == PaymentMethod.CARD) {
             if (convertToDouble(paymentArray[5]) == null){
-                logger.logError("Card number not correct.", paymentData);
+                fileLogger.logError("Card number not correct.", paymentData);
                 return;
             }
             payment.setCardNumber(convertToDouble(paymentArray[5]));
         }
         else {
             if (convertToDouble(paymentArray[4]) == null){
-                logger.logError("Transfer number not correct.", paymentData);
+                fileLogger.logError("Transfer number not correct.", paymentData);
                 return;
             }
             payment.setAccountNumber(convertToDouble(paymentArray[4]));
@@ -95,9 +97,9 @@ public class PaymentDAOImpl implements PaymentDAO {
         payments.add(payment);
     }
 
-    private Double convertToDouble(String number){
+    private Double convertToDouble(java.lang.String number){
         try {
-            if (number == "") return null;
+            if (number.equals("")) return null;
             number = (number.replaceAll("[+]", ""));
             return Double.parseDouble(number.replaceAll(",", "."));
 
@@ -106,16 +108,14 @@ public class PaymentDAOImpl implements PaymentDAO {
         }
     }
 
-    private LocalDate parseToDate(String dateString){
+    private LocalDate parseToDate(java.lang.String dateString){
         dateString = dateString.replaceAll("[:,.]", "-");
         try{
-            //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
             DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                     .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                     .appendOptional(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
                     .toFormatter();
-            LocalDate date = LocalDate.parse(dateString, formatter);
-            return date;
+            return LocalDate.parse(dateString, formatter);
         } catch (DateTimeParseException e){
             return null;
         }
@@ -123,5 +123,21 @@ public class PaymentDAOImpl implements PaymentDAO {
 
     public List<Payment> getPayments(){
         return new ArrayList<Payment>(payments);
+    }
+
+    public void saveWebshopIncomesToFile(FileLogger fileLogger, List<WebshopIncome> webshopIncomes){
+        for(WebshopIncome webshopIncome : webshopIncomes){
+            fileLogger.logInfo(webshopIncome.getWebshopId() + ";"
+                    + webshopIncome.getCardPayments() + ";"
+                    + webshopIncome.getTransferPayments());
+        }
+    }
+
+    public void saveAllCustomersSpendingToFile(FileLogger fileLogger, List<Customer> customers){
+        for (Customer customer : customers){
+            fileLogger.logInfo(customer.getCustomerName() +";" +
+                    customer.getCustomerAddress() +";" +
+                    customer.getTotalSpending());
+        }
     }
 }

@@ -1,24 +1,26 @@
 package org.example.model;
 
+import java.util.Objects;
+
 public class WebshopIncome {
-    private WebshopId webshopId;
+    private final String string;
     private double cardPayments = 0.0;
     private double transferPayments = 0.0;
 
-    public WebshopIncome(WebshopId webshopId) {
-        this.webshopId = webshopId;
+    public WebshopIncome(String string) {
+        this.string = string;
     }
 
     public void addCardPaymentsAmount(double amount){
         cardPayments += amount;
     }
 
-    public void addTrasferPaymentAmount(double amount){
+    public void addTransferPaymentAmount(double amount){
         transferPayments += amount;
     }
 
-    public WebshopId getWebshopId() {
-        return webshopId;
+    public String getWebshopId() {
+        return string;
     }
 
     public double getCardPayments() {
@@ -27,5 +29,17 @@ public class WebshopIncome {
 
     public double getTransferPayments() {
         return transferPayments;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WebshopIncome that)) return false;
+        return Double.compare(that.cardPayments, cardPayments) == 0 && Double.compare(that.transferPayments, transferPayments) == 0 && Objects.equals(string, that.string);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(string, cardPayments, transferPayments);
     }
 }

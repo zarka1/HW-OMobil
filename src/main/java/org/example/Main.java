@@ -7,21 +7,22 @@ import org.example.service.DAO.PaymentDAO;
 import org.example.service.DAO.PaymentDAOImpl;
 import org.example.service.Logger.ConsoleLogger;
 import org.example.service.Logger.FileLogger;
-import org.example.service.Logger.Logger;
 
 public class Main {
+    private static final String APPLICATION_LOG = "./application.log";
+    private static final String CUSTOMER_CSV = "./customer.csv";
+    private static final String PAYMENT_CSV = "./payments.csv";
+
     public static void main(String[] args){
-        Logger fileLogger = new FileLogger("./src/main/resources/application.log");
-        Logger consoleLogger = new ConsoleLogger();
+        FileLogger fileLogger = new FileLogger(APPLICATION_LOG); //readme-ben buildelest...
+        ConsoleLogger consoleLogger = new ConsoleLogger();
         Bank.clearLogFiles(consoleLogger);
-        CustomerDAO customerDAO = new CustomerDAOImpl("./src/main/resources/customer.csv", fileLogger);
-        CustomerService customerService = new CustomerService(customerDAO, consoleLogger);
-        PaymentDAO paymentDAO = new PaymentDAOImpl("./src/main/resources/payments.csv",
-                fileLogger, customerDAO);
-        PaymentService paymentService = new PaymentService(paymentDAO, consoleLogger, customerDAO);
-        customerService.printCustomers();
+        CustomerDAO customerDAO = new CustomerDAOImpl(CUSTOMER_CSV, fileLogger, consoleLogger);
+        PaymentDAO paymentDAO = new PaymentDAOImpl(PAYMENT_CSV,
+                fileLogger, consoleLogger, customerDAO);
+        PaymentService paymentService = new PaymentService(paymentDAO, customerDAO);
         paymentService.printPayments();
-        Bank bank = new Bank(customerService, paymentService);
+        Bank bank = new Bank(paymentService);
         bank.run();
     }
 }

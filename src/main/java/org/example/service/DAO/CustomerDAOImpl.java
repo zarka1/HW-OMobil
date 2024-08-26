@@ -1,9 +1,8 @@
 package org.example.service.DAO;
 
 import org.example.model.Customer;
-import org.example.model.WebshopId;
-import org.example.service.Logger.Logger;
-
+import org.example.service.Logger.ConsoleLogger;
+import org.example.service.Logger.FileLogger;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -12,53 +11,53 @@ import java.util.List;
 
 public class CustomerDAOImpl implements CustomerDAO {
 
-    private List<Customer> customers;
-    private String filePath;
-    private Logger logger;
+    private final List<Customer> customers;
+    private final java.lang.String filePath;
+    private final FileLogger fileLogger;
+    private final ConsoleLogger consoleLogger;
 
-    public CustomerDAOImpl(String filePath, Logger logger) {
+    public CustomerDAOImpl(java.lang.String filePath, FileLogger fileLogger, ConsoleLogger consoleLogger) {
         this.filePath = filePath;
-        this.logger = logger;
+        this.fileLogger = fileLogger;
+        this.consoleLogger = consoleLogger;
         this.customers = readCustomers();
     }
 
-    @Override
-    public List<Customer> readCustomers() {
+    private List<Customer> readCustomers() {
         List<Customer> customers = new ArrayList<>();
         try {
             File myObj = new File(filePath);
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
+                java.lang.String data = myReader.nextLine();
                 saveCustomerInMem(data, customers);
             }
             myReader.close();
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
+            consoleLogger.logInfo("An error occurred.");
             e.printStackTrace();
         }
         return customers;
     }
 
     @Override
-    public boolean checkIfExist( String customerId) {
+    public boolean checkIfExist( java.lang.String customerId) {
         for(Customer customer : customers){
-            if(customer.identified( customerId)){
+            if(customer.hasCustomerId( customerId)){
                 return true;
             }
         }
         return false;
     }
 
-    private void saveCustomerInMem(String customerData, List<Customer> customers){
-        String[] customerArray = customerData.split(";");
-        if(WebshopId.checkIfExist(customerArray[0]) == false ){
-            logger.logError("Webshop Id not correct.", customerData);
-        } else if(!checkAddress(customerArray[3])){
-            logger.logError("Address is not correct.", customerData);
+    private void saveCustomerInMem(java.lang.String customerData, List<Customer> customers){
+        java.lang.String[] customerArray = customerData.split(";");
+
+       if(!checkAddress(customerArray[3])){
+            fileLogger.logError("Address is not correct.", customerData);
         }
         else {
-            Customer customer = new Customer(WebshopId.findByName(customerArray[0]),
+            Customer customer = new Customer(customerArray[0],
                     customerArray[1],
                     customerArray[2],
                     customerArray[3]);
@@ -66,13 +65,12 @@ public class CustomerDAOImpl implements CustomerDAO {
         }
     }
 
-    private boolean checkAddress(String address){
-        String[] addressArray = address.split(" ");
+    private boolean checkAddress(java.lang.String address){
+        java.lang.String[] addressArray = address.split(" ");
         if(addressArray[1].length() != 4 || addressArray.length != 5)
             return false;
         try{
             Integer.parseInt(addressArray[1]);
-            Integer.parseInt(addressArray[4]);
         } catch(NumberFormatException e) {
             return false;
         }
