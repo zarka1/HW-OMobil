@@ -18,7 +18,7 @@ public class CustomerDAOImpl implements CustomerDAO {
     public CustomerDAOImpl(String filePath, Logger logger) {
         this.filePath = filePath;
         this.logger = logger;
-        customers = readCustomers();
+        this.customers = readCustomers();
     }
 
     @Override
@@ -29,7 +29,7 @@ public class CustomerDAOImpl implements CustomerDAO {
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
-                saveCustomerDataInMem(data, customers);
+                saveCustomerInMem(data, customers);
             }
             myReader.close();
         } catch (FileNotFoundException e) {
@@ -39,7 +39,17 @@ public class CustomerDAOImpl implements CustomerDAO {
         return customers;
     }
 
-    private void saveCustomerDataInMem (String customerData, List<Customer> customers){
+    @Override
+    public boolean checkIfExist( String customerId) {
+        for(Customer customer : customers){
+            if(customer.identified( customerId)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void saveCustomerInMem(String customerData, List<Customer> customers){
         String[] customerArray = customerData.split(";");
         if(WebshopId.checkIfExist(customerArray[0]) == false ){
             logger.logError("Webshop Id not correct.", customerData);
@@ -48,7 +58,7 @@ public class CustomerDAOImpl implements CustomerDAO {
         }
         else {
             Customer customer = new Customer(WebshopId.findByName(customerArray[0]),
-                    customerArray[1],
+                    customerArray[0] + "_" + customerArray[1],
                     customerArray[2],
                     customerArray[3]);
             customers.add(customer);
@@ -66,5 +76,9 @@ public class CustomerDAOImpl implements CustomerDAO {
             return false;
         }
         return true;
+    }
+
+    public List<Customer> getCustomers() {
+        return customers;
     }
 }

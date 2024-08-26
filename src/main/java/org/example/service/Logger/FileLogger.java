@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class FileLogger implements Logger {
     private String logFile;
 
+
     public FileLogger(String filePath) {
         logFile = filePath;
     }
@@ -26,6 +27,12 @@ public class FileLogger implements Logger {
 
     @Override
     public void logInfo(String message) {
-
+        try (FileWriter fileWriter = new FileWriter(logFile, true);
+             PrintWriter printWriter = new PrintWriter(fileWriter)) {
+            String timestamp = LocalDateTime.now().toString();
+            printWriter.println(timestamp + " - INFO: " + message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
