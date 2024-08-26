@@ -21,7 +21,6 @@ public class Main {
         PaymentDAO paymentDAO = new PaymentDAOImpl(PAYMENT_CSV,
                 fileLogger, consoleLogger, customerDAO);
         PaymentService paymentService = new PaymentService(paymentDAO, customerDAO);
-        paymentService.printPayments();
         Bank bank = new Bank(paymentService);
         bank.run();
     }
